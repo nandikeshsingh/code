@@ -1,0 +1,6 @@
+Time Table Scheduling using Genetic Algorithm| Term Project 	     [Feb'18-April'18] 
+•	Prepared a model to optimize the time table in a way as to minimize the clashes between the classes using genetic algorithm. 
+•	Implemented a Binary Coded Genetic Algorithm, used concepts like tournament selection, crossover, mutation, fitness for its optimization. 
+Playing with Algorithms | Kharagpur winter of code  	      [Dec'16-Jan'17] 
+•	Contributed to a github repository which required extensive knowledge of advanced data structure and algorithms and machine learning. 
+•	Coded shortest path graph algorithms like Dijkstra and implemented algorithms that required concepts of dynamic programming, greedy etc. 

@@ -1,0 +1,402 @@
+WHEN bRightIndicator_IsOn = 1
+THEN It's value shall be printed
+
+WHEN bLeftIndicator_IsOn = 1
+THEN It's value shall be printed
+
+
+
+eHeadlampOffAuto_State shall be set to 0 when notifyHeadLightStatus.ExtLgtAutoTellTaleRq is received with value 0.
+eHeadlampOffAuto_State shall be set to 0 when notifyHeadLightStatus.ExtLgtAutoTellTaleRq is received with value 1.
+eHeadlampOffAuto_State shall be set to 1 when notifyHeadLightStatus.ExtLgtAutoTellTaleRq is received with value 2 and CFG_ExtLghtTellTaleCol is set with value "ROW".
+eHeadlampOffAuto_State shall be set to 2 when notifyHeadLightStatus.ExtLgtAutoTellTaleRq is received with value 2 and CFG_ExtLghtTellTaleCol is set with value "CHINA".
+eHeadlampOffAuto_State shall be set to 0 when notifyHeadLightStatus.ExtLgtAutoTellTaleRq is received with value 3.
+
+
+
+
+iHeadLightStatus
+
+
+Removing the green part from the requirement might be needed in the future so saving it here.
+So with Green and White both headlightoff TRM requirement was something as mentioned below : 
+**********
+Headlights off Indicator
+Cluster tell tale to indicate when exterior lighting system is in Auto.
+
+Constants Definition
+ CONST_HEADLIGHT_GET shall be defined as 20s
+CONST_HEADLIGHT_MISSING shall be defined as 60s
+
+Operation
+
+eHeadlampOffAuto_State shall be initially set to HEADLAMP_OFF_STATE_OFF.
+eHeadlampOffAuto_State shall be set to HEADLAMP_OFF_STATE_OFF when  NotifyHeadLightStat.e_headlight_status is received with value E_HEADLIGHT_OFF.
+eHeadlampOffAuto_State shall be set to HEADLAMP_OFF_STATE_OFF when  NotifyHeadLightStat.e_headlight_status is received with value E_HEADLIGHT_AUTO.
+eHeadlampOffAuto_State shall be set to HEADLAMP_OFF_AUTO_STATE_HEADLAMPS_OFF_WHITE when  NotifyHeadLightStat.e_headlight_status is received with value E_HEADLIGHT_OFF_TELL_TALE and CFG_ExtLghtTellTaleCol is set with value "ROW".
+eHeadlampOffAuto_State shall be set to HEADLAMP_OFF_STATE_GREEN when  NotifyHeadLightStat.e_headlight_status is received with value E_HEADLIGHT_OFF_TELL_TALE and CFG_ExtLghtTellTaleCol is set with value "CHINA".
+eHeadlampOffAuto_State shall be set to HEADLAMP_OFF_STATE_OFF when  NotifyHeadLightStat.e_headlight_status is received with value E_HEADLIGHT_RESERVED2.
+If a time period longer than CONST_HEADLIGHT_GET elapses before a subsequent NotifyHeadLightStat is received, GetHeadLightStatRequest shall be transmitted.
+If a time period longer than CONST_HEADLIGHT_MISSING elapses before a subsequent NotifyHeadLightStat or a response to GetHeadLightStatRequest is received, eHeadlampOffAuto_State shall be set to HEADLAMP_OFF_STATE_OFF.
+If the returned value of GetHeadLightStatResponse.e_headlight_status is E_HEADLIGHT_OFF and GetHeadLightStatResponse.e_signal_status is E_API_STATUS_OK, eHeadlampOffAuto_State shall be set to HEADLAMP_OFF_STATE_OFF.
+If the returned value of GetHeadLightStatResponse.e_headlight_status is E_HEADLIGHT_AUTO and GetHeadLightStatResponse.e_signal_status is E_API_STATUS_OK , eHeadlampOffAuto_State shall be set to HEADLAMP_OFF_STATE_OFF.
+If the returned value of GetHeadLightStatResponse.e_headlight_status is E_HEADLIGHT_RESERVED2 and GetHeadLightStatResponse.e_signal_status is E_API_STATUS_OK, eHeadlampOffAuto_State shall be set to HEADLAMP_OFF_STATE_OFF
+If the returned value of GetHeadLightStatResponse.e_headlight_status is E_HEADLIGHT_OFF_TELL_TALE and GetHeadLightStatResponse.e_signal_status is E_API_STATUS_OK and CFG_ExtLghtTellTaleCol is set with value "ROW", eHeadlampOffAuto_State shall be set to HEADLAMP_OFF_STATE_WHITE.
+If the returned value of GetHeadLightStatResponse.e_headlight_status is E_HEADLIGHT_OFF_TELL_TALE and GetHeadLightStatResponse.e_signal_status is E_API_STATUS_OK and CFG_ExtLghtTellTaleCol is set with value "CHINA", eHeadlampOffAuto_State shall be set to HEADLAMP_OFF_STATE_GREEN.
+
+// TRM SSA Requirements freeze issue?
+
+// Hello all, so I am facing this issue in TRM that even after raising a change action,
+// I am not able to change the state of SSA Requirements/chapters form In Work to Frozen although I am able to edit/add the SSA requirments/chapters.
+// NotifyDirectionIndicator.e_direction_indicator_status
+// GetDirectionIndicatorStatResponse.e_direction_indicator_status
+// GetDirectionIndicatorStatResponse.e_signal_status
+
+When eHeadlampOffAuto_State = HEADLAMP_OFF_AUTO_STATE_HEADLAMPS_OFF_GREEN (2)
+Then eHeadlampOffAuto_State is printed to the screen.
+Then 2 is printed to the screen.
+
+
+*****************************************************************************************************************************
+Direction Indicators Functional Test case as per DirectionIndicator2 .proto file
+
+#Initial
+
+Then indDirection.bLeftIndicator_IsOn == FALSE
+Then indDirection.bRightIndicator_IsOn == FALSE
+
+#Scenario: Both indicators off
+
+Given NotifyDirectionIndicator.e_direction_indicator_status = "E_DIRECTION_IND_OFF"
+Given NotifyDirectionIndicator is sent
+
+Then indDirection.bLeftIndicator_IsOn == FALSE
+Then indDirection.bRightIndicator_IsOn == FALSE
+
+#Scenario: Indicator stuck left (missing notify) get returns "E_DIRECTION_IND_OFF"
+
+Given GetDirectionIndicatorStatResponse.e_direction_indicator_status = "E_DIRECTION_IND_OFF"
+Given GetDirectionIndicatorStatResponse.e_signal_status = "ENUM_STATUS_OK"
+
+Given NotifyDirectionIndicator.e_direction_indicator_status = "E_DIRECTION_IND_LEFT"
+Given NotifyDirectionIndicator is sent
+
+Then indDirection.bLeftIndicator_IsOn == TRUE
+Then indDirection.bRightIndicator_IsOn == FALSE
+
+When after(600,msec)
+
+Then GetDirectionIndicatorStatRequest is received
+
+When GetDirectionIndicatorStatResponse is sent
+Then indDirection.bLeftIndicator_IsOn == FALSE
+Then indDirection.bRightIndicator_IsOn == FALSE
+
+#Scenario: Indicator stuck left (missing notify) get returns "E_DIRECTION_IND_LEFT"
+
+Given GetDirectionIndicatorStatResponse.e_direction_indicator_status = "E_DIRECTION_IND_LEFT"
+Given GetDirectionIndicatorStatResponse.e_signal_status = "ENUM_STATUS_OK"
+
+Given NotifyDirectionIndicator.e_direction_indicator_status = "E_DIRECTION_IND_LEFT"
+Given NotifyDirectionIndicator is sent
+
+Then indDirection.bLeftIndicator_IsOn == TRUE
+Then indDirection.bRightIndicator_IsOn == FALSE
+
+When after(600,msec)
+
+Then GetDirectionIndicatorStatRequest is received
+
+When GetDirectionIndicatorStatResponse is sent
+Then indDirection.bLeftIndicator_IsOn == TRUE
+Then indDirection.bRightIndicator_IsOn == FALSE
+
+
+#Scenario: Indicator stuck left (missing notify) get returns "E_DIRECTION_IND_RIGHT"
+
+Given GetDirectionIndicatorStatResponse.e_direction_indicator_status = "E_DIRECTION_IND_RIGHT"
+Given GetDirectionIndicatorStatResponse.e_signal_status = "ENUM_STATUS_OK"
+
+Given NotifyDirectionIndicator.e_direction_indicator_status = "E_DIRECTION_IND_LEFT"
+Given NotifyDirectionIndicator is sent
+
+Then indDirection.bLeftIndicator_IsOn == TRUE
+Then indDirection.bRightIndicator_IsOn == FALSE
+
+When after(600,msec)
+
+Then GetDirectionIndicatorStatRequest is received
+
+When GetDirectionIndicatorStatResponse is sent
+Then indDirection.bLeftIndicator_IsOn == FALSE
+Then indDirection.bRightIndicator_IsOn == TRUE
+
+
+#Scenario: Indicator stuck left (missing notify) get returns "E_DIRECTION_IND_HAZARDS"
+
+Given GetDirectionIndicatorStatResponse.e_direction_indicator_status = "E_DIRECTION_IND_HAZARDS"
+Given GetDirectionIndicatorStatResponse.e_signal_status = "ENUM_STATUS_OK"
+
+Given NotifyDirectionIndicator.e_direction_indicator_status = "E_DIRECTION_IND_LEFT"
+Given NotifyDirectionIndicator is sent
+
+Then indDirection.bLeftIndicator_IsOn == TRUE
+Then indDirection.bRightIndicator_IsOn == FALSE
+
+When after(600,msec)
+
+Then GetDirectionIndicatorStatRequest is received
+
+When GetDirectionIndicatorStatResponse is sent
+Then indDirection.bLeftIndicator_IsOn == TRUE
+Then indDirection.bRightIndicator_IsOn == TRUE
+
+
+#Scenario: Indicator stuck left (missing notify) get is unsuccessful
+
+Given GetDirectionIndicatorStatResponse.e_direction_indicator_status = "E_DIRECTION_IND_OFF"
+Given GetDirectionIndicatorStatResponse.e_signal_status = "ENUM_STATUS_DATA_UNRELIABLE"
+
+Given NotifyDirectionIndicator.e_direction_indicator_status = "E_DIRECTION_IND_LEFT"
+Given NotifyDirectionIndicator is sent
+
+Then indDirection.bLeftIndicator_IsOn == TRUE
+Then indDirection.bRightIndicator_IsOn == FALSE
+
+When after(600,msec)
+
+Then GetDirectionIndicatorStatRequest is received
+
+When GetDirectionIndicatorStatResponse is sent
+Then indDirection.bLeftIndicator_IsOn == TRUE
+Then indDirection.bRightIndicator_IsOn == FALSE #Output should not change
+
+When after(150,msec)
+
+Then indDirection.bLeftIndicator_IsOn == FALSE
+Then indDirection.bRightIndicator_IsOn == FALSE
+
+
+#Scenario: Indicator stuck right (missing notify) get returns "E_DIRECTION_IND_OFF"
+
+Given GetDirectionIndicatorStatResponse.e_direction_indicator_status = "E_DIRECTION_IND_OFF"
+Given GetDirectionIndicatorStatResponse.e_signal_status = "ENUM_STATUS_OK"
+
+Given NotifyDirectionIndicator.e_direction_indicator_status = "E_DIRECTION_IND_RIGHT"
+Given NotifyDirectionIndicator is sent
+
+Then indDirection.bLeftIndicator_IsOn == FALSE
+Then indDirection.bRightIndicator_IsOn == TRUE
+
+When after(600,msec)
+
+Then GetDirectionIndicatorStatRequest is received
+
+When GetDirectionIndicatorStatResponse is sent
+Then indDirection.bLeftIndicator_IsOn == FALSE
+Then indDirection.bRightIndicator_IsOn == FALSE
+
+#Scenario: Indicator stuck right (missing notify) get returns "E_DIRECTION_IND_LEFT"
+
+Given GetDirectionIndicatorStatResponse.e_direction_indicator_status = "E_DIRECTION_IND_LEFT"
+Given GetDirectionIndicatorStatResponse.e_signal_status = "ENUM_STATUS_OK"
+
+Given NotifyDirectionIndicator.e_direction_indicator_status = "E_DIRECTION_IND_RIGHT"
+Given NotifyDirectionIndicator is sent
+
+Then indDirection.bLeftIndicator_IsOn == FALSE
+Then indDirection.bRightIndicator_IsOn == TRUE
+
+When after(600,msec)
+
+Then GetDirectionIndicatorStatRequest is received
+
+When GetDirectionIndicatorStatResponse is sent
+Then indDirection.bLeftIndicator_IsOn == TRUE
+Then indDirection.bRightIndicator_IsOn == FALSE
+
+
+#Scenario: Indicator stuck right (missing notify) get returns "E_DIRECTION_IND_RIGHT"
+
+Given GetDirectionIndicatorStatResponse.e_direction_indicator_status = "E_DIRECTION_IND_RIGHT"
+Given GetDirectionIndicatorStatResponse.e_signal_status = "ENUM_STATUS_OK"
+
+Given NotifyDirectionIndicator.e_direction_indicator_status = "E_DIRECTION_IND_RIGHT"
+Given NotifyDirectionIndicator is sent
+
+Then indDirection.bLeftIndicator_IsOn == FALSE
+Then indDirection.bRightIndicator_IsOn == TRUE
+
+When after(600,msec)
+
+Then GetDirectionIndicatorStatRequest is received
+
+When GetDirectionIndicatorStatResponse is sent
+Then indDirection.bLeftIndicator_IsOn == FALSE
+Then indDirection.bRightIndicator_IsOn == TRUE
+
+
+#Scenario: Indicator stuck right (missing notify) get returns "E_DIRECTION_IND_HAZARDS"
+
+Given GetDirectionIndicatorStatResponse.e_direction_indicator_status = "E_DIRECTION_IND_HAZARDS"
+Given GetDirectionIndicatorStatResponse.e_signal_status = "ENUM_STATUS_OK"
+
+Given NotifyDirectionIndicator.e_direction_indicator_status = "E_DIRECTION_IND_RIGHT"
+Given NotifyDirectionIndicator is sent
+
+Then indDirection.bLeftIndicator_IsOn == FALSE
+Then indDirection.bRightIndicator_IsOn == TRUE
+
+When after(600,msec)
+
+Then GetDirectionIndicatorStatRequest is received
+
+When GetDirectionIndicatorStatResponse is sent
+Then indDirection.bLeftIndicator_IsOn == TRUE
+Then indDirection.bRightIndicator_IsOn == TRUE
+
+
+#Scenario: Indicator stuck right (missing notify) get is unsuccessful
+
+Given GetDirectionIndicatorStatResponse.e_direction_indicator_status = "E_DIRECTION_IND_OFF"
+Given GetDirectionIndicatorStatResponse.e_signal_status = "ENUM_STATUS_DATA_UNRELIABLE"
+
+Given NotifyDirectionIndicator.e_direction_indicator_status = "E_DIRECTION_IND_RIGHT"
+Given NotifyDirectionIndicator is sent
+
+Then indDirection.bLeftIndicator_IsOn == FALSE
+Then indDirection.bRightIndicator_IsOn == TRUE
+
+When after(600,msec)
+
+Then GetDirectionIndicatorStatRequest is received
+
+When GetDirectionIndicatorStatResponse is sent
+Then indDirection.bLeftIndicator_IsOn == FALSE
+Then indDirection.bRightIndicator_IsOn == TRUE # Output should not change
+
+When after(150,msec)
+
+Then indDirection.bLeftIndicator_IsOn == FALSE
+Then indDirection.bRightIndicator_IsOn == FALSE
+
+
+
+#Scenario: Indicator stuck hazards (missing notify) get returns "E_DIRECTION_IND_OFF"
+
+Given GetDirectionIndicatorStatResponse.e_direction_indicator_status = "E_DIRECTION_IND_OFF"
+Given GetDirectionIndicatorStatResponse.e_signal_status = "ENUM_STATUS_OK"
+
+Given NotifyDirectionIndicator.e_direction_indicator_status = "E_DIRECTION_IND_HAZARDS"
+Given NotifyDirectionIndicator is sent
+
+Then indDirection.bLeftIndicator_IsOn == TRUE
+Then indDirection.bRightIndicator_IsOn == TRUE
+
+When after(600,msec)
+
+Then GetDirectionIndicatorStatRequest is received
+
+When GetDirectionIndicatorStatResponse is sent
+Then indDirection.bLeftIndicator_IsOn == FALSE
+Then indDirection.bRightIndicator_IsOn == FALSE
+
+#Scenario: Indicator stuck hazards (missing notify) get returns "E_DIRECTION_IND_LEFT"
+
+Given GetDirectionIndicatorStatResponse.e_direction_indicator_status = "E_DIRECTION_IND_LEFT"
+Given GetDirectionIndicatorStatResponse.e_signal_status = "ENUM_STATUS_OK"
+
+Given NotifyDirectionIndicator.e_direction_indicator_status = "E_DIRECTION_IND_HAZARDS"
+Given NotifyDirectionIndicator is sent
+
+Then indDirection.bLeftIndicator_IsOn == TRUE
+Then indDirection.bRightIndicator_IsOn == TRUE
+
+When after(600,msec)
+
+Then GetDirectionIndicatorStatRequest is received
+
+When GetDirectionIndicatorStatResponse is sent
+Then indDirection.bLeftIndicator_IsOn == TRUE
+Then indDirection.bRightIndicator_IsOn == FALSE
+
+
+#Scenario: Indicator stuck hazards (missing notify) get returns "E_DIRECTION_IND_RIGHT"
+
+Given GetDirectionIndicatorStatResponse.e_direction_indicator_status = "E_DIRECTION_IND_RIGHT"
+Given GetDirectionIndicatorStatResponse.e_signal_status = "ENUM_STATUS_OK"
+
+Given NotifyDirectionIndicator.e_direction_indicator_status = "E_DIRECTION_IND_HAZARDS"
+Given NotifyDirectionIndicator is sent
+
+Then indDirection.bLeftIndicator_IsOn == TRUE
+Then indDirection.bRightIndicator_IsOn == TRUE
+
+When after(600,msec)
+
+Then GetDirectionIndicatorStatRequest is received
+
+When GetDirectionIndicatorStatResponse is sent
+Then indDirection.bLeftIndicator_IsOn == FALSE
+Then indDirection.bRightIndicator_IsOn == TRUE
+
+
+#Scenario: Indicator stuck hazards (missing notify) get returns "E_DIRECTION_IND_HAZARDS"
+
+Given GetDirectionIndicatorStatResponse.e_direction_indicator_status = "E_DIRECTION_IND_HAZARDS"
+Given GetDirectionIndicatorStatResponse.e_signal_status = "ENUM_STATUS_OK"
+
+Given NotifyDirectionIndicator.e_direction_indicator_status = "E_DIRECTION_IND_HAZARDS"
+Given NotifyDirectionIndicator is sent
+
+Then indDirection.bLeftIndicator_IsOn == TRUE
+Then indDirection.bRightIndicator_IsOn == TRUE
+
+When after(600,msec)
+
+Then GetDirectionIndicatorStatRequest is received
+
+When GetDirectionIndicatorStatResponse is sent
+Then indDirection.bLeftIndicator_IsOn == TRUE
+Then indDirection.bRightIndicator_IsOn == TRUE
+
+
+#Scenario: Indicator stuck hazards (missing notify) get is unsuccessful
+
+Given GetDirectionIndicatorStatResponse.e_direction_indicator_status = "E_DIRECTION_IND_OFF"
+Given GetDirectionIndicatorStatResponse.e_signal_status = "ENUM_STATUS_DATA_UNRELIABLE"
+
+Given NotifyDirectionIndicator.e_direction_indicator_status = "E_DIRECTION_IND_HAZARDS"
+Given NotifyDirectionIndicator is sent
+
+Then indDirection.bLeftIndicator_IsOn == TRUE
+Then indDirection.bRightIndicator_IsOn == TRUE
+
+When after(600,msec)
+
+Then GetDirectionIndicatorStatRequest is received
+
+When GetDirectionIndicatorStatResponse is sent
+Then indDirection.bLeftIndicator_IsOn == TRUE
+Then indDirection.bRightIndicator_IsOn == TRUE # Output should not change
+
+When after(150,msec)
+
+Then indDirection.bLeftIndicator_IsOn == FALSE
+Then indDirection.bRightIndicator_IsOn == FALSE
+
+
+
+
+*************************************************************
+CONST_ENUM_CLUSTER_WIDGET_x_TYRES
+
+
+
+
+
+Wrote an algorithm in python that takes an image and outputs the coordinates within short time on which the robot should walk on the 
+    welding plates. 
+Hackerrank Problem Solving (Advanced) 
+This certification is achieved after solving various problems on data structure, algorithms, probability, combinatorics etc of varying difficulty. 
+
